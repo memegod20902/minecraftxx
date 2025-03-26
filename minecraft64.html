@@ -460,3 +460,210 @@ public class MinecraftLike3D {
         game.loop();
     }
 }
+glEnable(GL_DEBUG_OUTPUT);
+glDebugMessageCallback((source, type, id, severity, length, message, userParam) -> {
+    // Optionally, you can log or handle the debug messages here
+}, NULL);
+import org.lwjgl.*;
+import org.lwjgl.glfw.*;
+import org.lwjgl.opengl.*;
+import org.lwjgl.system.*;
+
+import java.nio.*;
+import org.lwjgl.util.vector.*;
+import static org.lwjgl.glfw.Callbacks.*;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.system.MemoryStack.*;
+import static org.lwjgl.system.MemoryUtil.*;
+
+public class MinecraftLike3D {
+
+    private long window;
+    private int width = 800, height = 600;
+
+    // Camera and movement
+    private float xPos = 0, yPos = 1, zPos = 5;
+    private float pitch = 0, yaw = 0;
+
+    public void init() {
+        // Initialize GLFW
+        if (!glfwInit()) {
+            throw new IllegalStateException("Unable to initialize GLFW");
+        }
+
+        // Create the window
+        window = glfwCreateWindow(width, height, "Minecraft-like 3D Game", NULL, NULL);
+        if (window == NULL) {
+            throw new RuntimeException("Failed to create the GLFW window");
+        }
+
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
+        glfwShowWindow(window);
+
+        // Initialize OpenGL
+        GL.createCapabilities();
+
+        glEnable(GL_DEPTH_TEST); // Enable depth testing for proper 3D rendering
+    }
+
+    public void loop() {
+        while (!glfwWindowShouldClose(window)) {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the screen
+
+            // Update camera (movement controls)
+            updateCamera();
+
+            // Draw simple 3D cube world (for demonstration)
+            drawCube(-1, -1, -5, 1);
+            drawCube(1, -1, -5, 1);
+
+            // Swap buffers and poll events
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+        }
+    }
+
+    private void drawCube(float x, float y, float z, float size) {
+        glPushMatrix();
+        glTranslatef(x, y, z);
+        glBegin(GL_QUADS);
+
+        // Front face
+        glColor3f(1, 0, 0); // Red
+        glVertex3f(-size, -size, size);
+        glVertex3f(size, -size, size);
+        glVertex3f(size, size, size);
+        glVertex3f(-size, size, size);
+
+        // Back face
+        glColor3f(0, 1, 0); // Green
+        glVertex3f(-size, -size, -size);
+        glVertex3f(-size, size, -size);
+        glVertex3f(size, size, -size);
+        glVertex3f(size, -size, -size);
+
+        // Left face
+        glColor3f(0, 0, 1); // Blue
+        glVertex3f(-size, -size, -size);
+        glVertex3f(-size, -size, size);
+        glVertex3f(-size, size, size);
+        glVertex3f(-size, size, -size);
+
+        // Right face
+        glColor3f(1, 1, 0); // Yellow
+        glVertex3f(size, -size, -size);
+        glVertex3f(size, size, -size);
+        glVertex3f(size, size, size);
+        glVertex3f(size, -size, size);
+
+        // Top face
+        glColor3f(1, 0, 1); // Magenta
+        glVertex3f(-size, size, -size);
+        glVertex3f(-size, size, size);
+        glVertex3f(size, size, size);
+        glVertex3f(size, size, -size);
+
+        // Bottom face
+        glColor3f(0, 1, 1); // Cyan
+        glVertex3f(-size, -size, -size);
+        glVertex3f(size, -size, -size);
+        glVertex3f(size, -size, size);
+        glVertex3f(-size, -size, size);
+
+        glEnd();
+        glPopMatrix();
+    }
+
+    private void updateCamera() {
+        // Apply simple movement (WASD)
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            zPos -= 0.1f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            zPos += 0.1f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            xPos -= 0.1f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            xPos += 0.1f;
+        }
+
+        // Apply simple pitch and yaw based on mouse movement
+        double[] xPos = new double[1], yPos = new double[1];
+        glfwGetCursorPos(window, xPos, yPos);
+        float mouseX = (float) xPos[0];
+        float mouseY = (float) yPos[0];
+
+        yaw = mouseX * 0.1f;
+        pitch = mouseY * 0.1f;
+
+        // Apply camera transformations
+        glRotatef(pitch, 1.0f, 0.0f, 0.0f);
+        glRotatef(yaw, 0.0f, 1.0f, 0.0f);
+        glTranslatef(-xPos, -yPos, -zPos);
+    }
+
+    public static void main(String[] args) {
+        MinecraftLike3D game = new MinecraftLike3D();
+        game.init();
+        game.loop();
+    }
+}
+
+    private long window;
+    private int width = 800, height = 600;
+    private int textureID;
+    private int terrainWidth = 10;
+    private int terrainHeight = 10;
+    
+    // Camera and movement
+    private float xPos = 0, yPos = 1, zPos = 5;
+    private float pitch = 0, yaw = 0;
+
+    public void init() {
+        if (!glfwInit()) {
+            throw new IllegalStateException("Unable to initialize GLFW");
+        }
+
+        window = glfwCreateWindow(width, height, "Minecraft-like 3D Game", NULL, NULL);
+        if (window == NULL) {
+            throw new RuntimeException("Failed to create the GLFW window");
+        }
+
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
+        glfwShowWindow(window);
+
+        GL.createCapabilities();
+
+        glEnable(GL_DEPTH_TEST);
+        textureID = loadTexture("grass_block.png"); // Load texture for blocks
+    }
+
+    public void loop() {
+        while (!glfwWindowShouldClose(window)) {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the screen
+
+            // Update camera (movement controls)
+            updateCamera();
+
+            // Render the terrain (blocks in a grid)
+            renderTerrain();
+
+            // Swap buffers and poll events
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+        }
+    }
+
+    private void renderTerrain() {
+        for (int x = 0; x < terrainWidth; x++) {
+            for (int z = 0; z < terrainHeight; z++) {
+                // Draw a block at the position
+                drawBlock(x, 0, z, 1);
+            }
+        }
+    }
