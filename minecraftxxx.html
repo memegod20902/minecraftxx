@@ -1,0 +1,141 @@
+<dependencies>
+    <dependency>
+        <groupId>org.lwjgl</groupId>
+        <artifactId>lwjgl</artifactId>
+        <version>3.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.lwjgl</groupId>
+        <artifactId>lwjgl-opengl</artifactId>
+        <version>3.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.lwjgl</groupId>
+        <artifactId>lwjgl-glfw</artifactId>
+        <version>3.3.0</version>
+    </dependency>
+</dependencies>
+import org.lwjgl.glfw.*;
+import org.lwjgl.opengl.*;
+import org.lwjgl.system.*;
+import org.lwjgl.util.vector.*;
+
+import java.nio.*;
+import static org.lwjgl.glfw.Callbacks.*;
+import static org.lwjgl.glfw.Glfw.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.system.MemoryStack.*;
+import static org.lwjgl.system.MemoryUtil.*;
+
+public class MinecraftClone {
+
+    private long window;
+    private int width = 800;
+    private int height = 600;
+
+    public static void main(String[] args) {
+        new MinecraftClone().run();
+    }
+
+    public void run() {
+        init();
+        loop();
+        cleanUp();
+    }
+
+    private void init() {
+        if (!glfwInit()) {
+            throw new IllegalStateException("Unable to initialize GLFW");
+        }
+
+        window = glfwCreateWindow(width, height, "Minecraft Clone", NULL, NULL);
+        if (window == NULL) {
+            throw new RuntimeException("Failed to create GLFW window");
+        }
+
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
+        glfwShowWindow(window);
+
+        GL.createCapabilities();
+        glEnable(GL_DEPTH_TEST);
+    }
+
+    private void loop() {
+        glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
+
+        while (!glfwWindowShouldClose(window)) {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glLoadIdentity();
+            
+            // Move the camera backward so we can see the blocks
+            glTranslatef(0.0f, 0.0f, -5.0f);
+
+            // Draw the cubes
+            drawBlock(0.0f, 0.0f, 0.0f);
+            drawBlock(2.0f, 0.0f, 0.0f);
+            drawBlock(0.0f, 2.0f, 0.0f);
+            drawBlock(0.0f, 0.0f, 2.0f);
+
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+        }
+    }
+
+    private void drawBlock(float x, float y, float z) {
+        glPushMatrix();
+        glTranslatef(x, y, z);
+
+        glBegin(GL_QUADS);
+
+        // Front face
+        glColor3f(1.0f, 0.0f, 0.0f); // Red color
+        glVertex3f(-1.0f, -1.0f,  1.0f);
+        glVertex3f( 1.0f, -1.0f,  1.0f);
+        glVertex3f( 1.0f,  1.0f,  1.0f);
+        glVertex3f(-1.0f,  1.0f,  1.0f);
+
+        // Back face
+        glColor3f(0.0f, 1.0f, 0.0f); // Green color
+        glVertex3f(-1.0f, -1.0f, -1.0f);
+        glVertex3f(-1.0f,  1.0f, -1.0f);
+        glVertex3f( 1.0f,  1.0f, -1.0f);
+        glVertex3f( 1.0f, -1.0f, -1.0f);
+
+        // Top face
+        glColor3f(0.0f, 0.0f, 1.0f); // Blue color
+        glVertex3f(-1.0f,  1.0f, -1.0f);
+        glVertex3f(-1.0f,  1.0f,  1.0f);
+        glVertex3f( 1.0f,  1.0f,  1.0f);
+        glVertex3f( 1.0f,  1.0f, -1.0f);
+
+        // Bottom face
+        glColor3f(1.0f, 1.0f, 0.0f); // Yellow color
+        glVertex3f(-1.0f, -1.0f, -1.0f);
+        glVertex3f( 1.0f, -1.0f, -1.0f);
+        glVertex3f( 1.0f, -1.0f,  1.0f);
+        glVertex3f(-1.0f, -1.0f,  1.0f);
+
+        // Right face
+        glColor3f(1.0f, 0.0f, 1.0f); // Magenta color
+        glVertex3f( 1.0f, -1.0f, -1.0f);
+        glVertex3f( 1.0f,  1.0f, -1.0f);
+        glVertex3f( 1.0f,  1.0f,  1.0f);
+        glVertex3f( 1.0f, -1.0f,  1.0f);
+
+        // Left face
+        glColor3f(0.0f, 1.0f, 1.0f); // Cyan color
+        glVertex3f(-1.0f, -1.0f, -1.0f);
+        glVertex3f(-1.0f, -1.0f,  1.0f);
+        glVertex3f(-1.0f,  1.0f,  1.0f);
+        glVertex3f(-1.0f,  1.0f, -1.0f);
+
+        glEnd();
+        glPopMatrix();
+    }
+
+    private void cleanUp() {
+        glfwDestroyWindow(window);
+        glfwTerminate();
+    }
+}
