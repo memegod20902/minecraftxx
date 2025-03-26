@@ -1,0 +1,314 @@
+import pygame
+import random
+import sys
+
+# Initialize pygame
+pygame.init()
+
+# Constants
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+BLOCK_SIZE = 30
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+BROWN = (139, 69, 19)
+
+# Setup screen
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Minecraft-like Game Prototype")
+
+# Player setup
+player_x = SCREEN_WIDTH // 2
+player_y = SCREEN_HEIGHT // 2
+player_speed = 5
+
+# Create a simple world (list of blocks)
+world = []
+
+# Generate a basic flat ground world
+for x in range(0, SCREEN_WIDTH, BLOCK_SIZE):
+    for y in range(SCREEN_HEIGHT - 100, SCREEN_HEIGHT, BLOCK_SIZE):
+        world.append((x, y, BROWN))  # Ground blocks (brown)
+
+# Function to draw the world (render blocks)
+def draw_world():
+    for block in world:
+        pygame.draw.rect(screen, block[2], (block[0], block[1], BLOCK_SIZE, BLOCK_SIZE))
+
+# Function to draw the player
+def draw_player():
+    pygame.draw.rect(screen, GREEN, (player_x, player_y, BLOCK_SIZE, BLOCK_SIZE))
+
+# Main game loop
+running = True
+while running:
+    screen.fill(WHITE)  # Clear the screen
+    draw_world()  # Draw the world
+    draw_player()  # Draw the player
+
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Get keys pressed for player movement
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        player_x -= player_speed
+    if keys[pygame.K_RIGHT]:
+        player_x += player_speed
+    if keys[pygame.K_UP]:
+        player_y -= player_speed
+    if keys[pygame.K_DOWN]:
+        player_y += player_speed
+
+    # Prevent the player from going out of bounds
+    if player_x < 0:
+        player_x = 0
+    if player_x > SCREEN_WIDTH - BLOCK_SIZE:
+        player_x = SCREEN_WIDTH - BLOCK_SIZE
+    if player_y < 0:
+        player_y = 0
+    if player_y > SCREEN_HEIGHT - BLOCK_SIZE:
+        player_y = SCREEN_HEIGHT - BLOCK_SIZE
+
+    pygame.display.update()  # Update the display
+
+    # Delay for a smoother gameplay
+    pygame.time.delay(100)
+
+pygame.quit()
+sys.exit()
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft-like Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; background-color: #87CEEB; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        // Setup canvas and context
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Canvas size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Block size and player properties
+        const blockSize = 50;
+        const playerSize = 50;
+        let playerX = canvas.width / 2;
+        let playerY = canvas.height / 2;
+        let playerSpeed = 5;
+
+        // Simple world (array of blocks)
+        let world = [];
+
+        // Generate simple flat world (ground blocks)
+        for (let x = 0; x < canvas.width; x += blockSize) {
+            for (let y = canvas.height - 100; y < canvas.height; y += blockSize) {
+                world.push({ x: x, y: y, color: "#8B4513" }); // Ground blocks
+            }
+        }
+
+        // Function to draw the world (blocks)
+        function drawWorld() {
+            world.forEach(block => {
+                ctx.fillStyle = block.color;
+                ctx.fillRect(block.x, block.y, blockSize, blockSize);
+            });
+        }
+
+        // Function to draw the player
+        function drawPlayer() {
+            ctx.fillStyle = "#228B22"; // Green player
+            ctx.fillRect(playerX, playerY, playerSize, playerSize);
+        }
+
+        // Function to move the player
+        function movePlayer() {
+            if (keys["ArrowLeft"]) playerX -= playerSpeed;
+            if (keys["ArrowRight"]) playerX += playerSpeed;
+            if (keys["ArrowUp"]) playerY -= playerSpeed;
+            if (keys["ArrowDown"]) playerY += playerSpeed;
+
+            // Prevent player from going out of bounds
+            if (playerX < 0) playerX = 0;
+            if (playerX > canvas.width - playerSize) playerX = canvas.width - playerSize;
+            if (playerY < 0) playerY = 0;
+            if (playerY > canvas.height - playerSize) playerY = canvas.height - playerSize;
+        }
+
+        // Handle keyboard input
+        let keys = {};
+        window.addEventListener("keydown", (e) => {
+            keys[e.key] = true;
+        });
+        window.addEventListener("keyup", (e) => {
+            keys[e.key] = false;
+        });
+
+        // Handle mouse click to add/remove blocks
+        canvas.addEventListener("click", (e) => {
+            let mouseX = e.clientX;
+            let mouseY = e.clientY;
+            // Find the grid position for the block clicked
+            let blockX = Math.floor(mouseX / blockSize) * blockSize;
+            let blockY = Math.floor(mouseY / blockSize) * blockSize;
+
+            // Toggle block color (add or remove)
+            let block = world.find(b => b.x === blockX && b.y === blockY);
+            if (block) {
+                block.color = block.color === "#8B4513" ? "#87CEEB" : "#8B4513"; // Toggle between ground and sky
+            }
+        });
+
+        // Game loop
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+            drawWorld(); // Draw the world
+            drawPlayer(); // Draw the player
+            movePlayer(); // Move the player
+            requestAnimationFrame(gameLoop); // Loop the game
+        }
+
+        gameLoop(); // Start the game loop
+    </script>
+</body>
+</html>
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+
+public class MinecraftLikeGame extends JPanel {
+
+    // Game Constants
+    static final int BLOCK_SIZE = 50;
+    static final int PLAYER_SIZE = 50;
+    static final int WINDOW_WIDTH = 800;
+    static final int WINDOW_HEIGHT = 600;
+
+    // Player and world properties
+    int playerX = WINDOW_WIDTH / 2;
+    int playerY = WINDOW_HEIGHT / 2;
+    int playerSpeed = 5;
+
+    // World representation (list of blocks)
+    ArrayList<Block> world = new ArrayList<>();
+
+    public MinecraftLikeGame() {
+        // Initialize world with ground blocks
+        for (int x = 0; x < WINDOW_WIDTH; x += BLOCK_SIZE) {
+            for (int y = WINDOW_HEIGHT - 100; y < WINDOW_HEIGHT; y += BLOCK_SIZE) {
+                world.add(new Block(x, y, Color.BROWN)); // Ground blocks
+            }
+        }
+
+        // KeyListener for player movement
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                    playerX -= playerSpeed;
+                } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                    playerX += playerSpeed;
+                } else if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    playerY -= playerSpeed;
+                } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    playerY += playerSpeed;
+                }
+
+                // Prevent player from going out of bounds
+                playerX = Math.max(0, Math.min(WINDOW_WIDTH - PLAYER_SIZE, playerX));
+                playerY = Math.max(0, Math.min(WINDOW_HEIGHT - PLAYER_SIZE, playerY));
+                repaint();
+            }
+        });
+
+        // MouseListener for block placement/removal
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int mouseX = e.getX();
+                int mouseY = e.getY();
+
+                // Find which block is clicked
+                for (Block block : world) {
+                    if (block.isClicked(mouseX, mouseY)) {
+                        block.toggle(); // Toggle block color (removal/addition)
+                        break;
+                    }
+                }
+                repaint();
+            }
+        });
+
+        setFocusable(true);
+    }
+
+    // Method to draw the world and player
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        // Draw the world (blocks)
+        for (Block block : world) {
+            block.draw(g);
+        }
+
+        // Draw the player
+        g.setColor(Color.GREEN); // Player color
+        g.fillRect(playerX, playerY, PLAYER_SIZE, PLAYER_SIZE);
+    }
+
+    // Block class to represent each block
+    class Block {
+        int x, y;
+        Color color;
+
+        Block(int x, int y, Color color) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+        }
+
+        void draw(Graphics g) {
+            g.setColor(color);
+            g.fillRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
+        }
+
+        boolean isClicked(int mouseX, int mouseY) {
+            return mouseX >= x && mouseX <= x + BLOCK_SIZE && mouseY >= y && mouseY <= y + BLOCK_SIZE;
+        }
+
+        void toggle() {
+            // Toggle between sky (blue) and ground (brown)
+            color = (color == Color.BROWN) ? Color.CYAN : Color.BROWN;
+        }
+    }
+
+    // Main method to run the game
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Minecraft-like Game");
+        MinecraftLikeGame gamePanel = new MinecraftLikeGame();
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+        frame.add(gamePanel);
+        frame.setVisible(true);
+    }
+}
