@@ -1,0 +1,145 @@
+
+from pygame.locals import *
+from OpenGL.GL import *
+from OpenGL.GLUT import *
+from OpenGL.GLU import *
+import random
+import math
+
+vertices = (
+    (1, -1, -1),
+    (1, 1, -1),
+    (-1, 1, -1),
+    (-1, -1, -1),
+    (1, -1, 1),
+    (1, 1, 1),
+    (-1, -1, 1),
+    (-1, 1, 1)
+)
+
+edges = (
+    (0, 1), (1, 2), (2, 3), (3, 0),
+    (4, 5), (5, 7), (7, 6), (6, 4),
+    (0, 4), (1, 5), (2, 7), (3, 6)
+)
+
+def draw_cube(x, y, z):
+    glPushMatrix()
+    glTranslatef(x, y, z)
+    glBegin(GL_LINES)
+    for edge in edges:
+        for vertex in edge:
+            glVertex3fv(vertices[vertex])
+    glEnd()
+    glPopMatrix()
+
+def generate_world(size=10):
+    world = []
+    for x in range(-size, size):
+        for z in range(-size, size):
+            height = random.randint(1, 3)  # Random terrain height variation
+            for y in range(-1, height):
+                world.append((x * 2, y * 2, z * 2))
+    return world
+
+def draw_button(screen, text, x, y, width, height):
+    font = pygame.font.Font(None, 36)
+    pygame.draw.rect(screen, (0, 200, 0), (x, y, width, height))
+    label = font.render(text, True, (255, 255, 255))
+    screen.blit(label, (x + 10, y + 10))
+
+def draw_hotbar(screen, selected_slot):
+    hotbar_x, hotbar_y = 200, 550
+    slot_size = 50
+    for i in range(5):
+        color = (200, 200, 200) if i == selected_slot else (100, 100, 100)
+        pygame.draw.rect(screen, color, (hotbar_x + i * (slot_size + 10), hotbar_y, slot_size, slot_size), 2)
+
+def start_screen():
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Minecraft Clone")
+    
+    button_x, button_y, button_width, button_height = 300, 250, 200, 50
+    running = True
+    while running:
+        screen.fill((0, 0, 0))
+        draw_button(screen, "Play", button_x, button_y, button_width, button_height)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                if button_x <= mx <= button_x + button_width and button_y <= my <= button_y + button_height:
+                    running = False
+        
+        pygame.display.flip()
+    
+    main()
+
+def main():
+    pygame.init()
+    display = (800, 600)
+    screen = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+    gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
+    glTranslatef(0.0, -3.0, -20)
+    
+    world = generate_world()
+    player_pos = [0, 0, 0]
+    yaw, pitch = 0, 0
+    mouse_sensitivity = 0.1
+    pygame.mouse.set_visible(False)
+    pygame.event.set_grab(True)
+    
+    selected_slot = 0
+    
+    running = True
+    while running:
+        screen.fill((0, 0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w:
+                    player_pos[2] += math.cos(math.radians(yaw))
+                    player_pos[0] -= math.sin(math.radians(yaw))
+                if event.key == pygame.K_s:
+                    player_pos[2] -= math.cos(math.radians(yaw))
+                    player_pos[0] += math.sin(math.radians(yaw))
+                if event.key == pygame.K_a:
+                    player_pos[2] += math.sin(math.radians(yaw))
+                    player_pos[0] += math.cos(math.radians(yaw))
+                if event.key == pygame.K_d:
+                    player_pos[2] -= math.sin(math.radians(yaw))
+                    player_pos[0] -= math.cos(math.radians(yaw))
+                if event.key == pygame.K_SPACE:
+                    player_pos[1] += 1
+                if event.key == pygame.K_LSHIFT:
+                    player_pos[1] -= 1
+                if event.key in [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]:
+                    selected_slot = int(event.unicode) - 1
+            if event.type == pygame.MOUSEMOTION:
+                dx, dy = event.rel
+                yaw += dx * mouse_sensitivity
+                pitch -= dy * mouse_sensitivity
+                pitch = max(-90, min(90, pitch))
+        
+        glLoadIdentity()
+        glRotatef(pitch, 1, 0, 0)
+        glRotatef(yaw, 0, 1, 0)
+        glTranslatef(-player_pos[0], -player_pos[1], -player_pos[2])
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        for block in world:
+            draw_cube(*block)
+        
+        draw_hotbar(screen, selected_slot)
+        pygame.display.flip()
+        pygame.time.wait(10)
+    
+    pygame.quit()
+
+if __name__ == "__main__":
+    start_screen()
