@@ -1,0 +1,210 @@
+import org.lwjgl.glfw.*;
+import org.lwjgl.opengl.*;
+import org.lwjgl.system.*;
+import org.lwjgl.util.vector.*;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+
+import java.nio.*;
+import static org.lwjgl.glfw.Callbacks.*;
+import static org.lwjgl.glfw.Glfw.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.system.MemoryStack.*;
+import static org.lwjgl.system.MemoryUtil.*;
+
+public class MinecraftClone {
+
+    private long window;
+    private int width = 800;
+    private int height = 600;
+    private float[] cameraPos = {0.0f, 0.0f, -5.0f};
+    private float cameraPitch = 0.0f;
+    private float cameraYaw = 0.0f;
+    private float moveSpeed = 0.1f;
+
+    private int[] blocks = new int[3]; // x, y, z coordinates for block interaction
+
+    public static void main(String[] args) {
+        new MinecraftClone().run();
+    }
+
+    public void run() {
+        init();
+        loop();
+        cleanUp();
+    }
+
+    private void init() {
+        if (!glfwInit()) {
+            throw new IllegalStateException("Unable to initialize GLFW");
+        }
+
+        window = glfwCreateWindow(width, height, "Minecraft Clone", NULL, NULL);
+        if (window == NULL) {
+            throw new RuntimeException("Failed to create GLFW window");
+        }
+
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
+        glfwShowWindow(window);
+
+        GL.createCapabilities();
+        glEnable(GL_DEPTH_TEST);
+
+        // Initialize Mouse and Keyboard
+        Mouse.setGrabbed(true);
+        Keyboard.enableRepeatEvents(true);
+    }
+
+    private void loop() {
+        glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
+
+        // Main game loop
+        while (!glfwWindowShouldClose(window)) {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glLoadIdentity();
+
+            // Handle camera movement
+            handleCameraMovement();
+
+            // Handle mouse look
+            handleMouseLook();
+
+            // Draw the blocks
+            drawWorld();
+
+            // Handle block placement and removal
+            handleBlockInteraction();
+
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+        }
+    }
+
+    private void handleCameraMovement() {
+        if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
+            cameraPos[2] += moveSpeed;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_S)) {
+            cameraPos[2] -= moveSpeed;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_A)) {
+            cameraPos[0] += moveSpeed;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_D)) {
+            cameraPos[0] -= moveSpeed;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+            cameraPos[1] += moveSpeed;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+            cameraPos[1] -= moveSpeed;
+        }
+
+        glTranslatef(cameraPos[0], cameraPos[1], cameraPos[2]);
+    }
+
+    private void handleMouseLook() {
+        float sensitivity = 0.2f;
+        float deltaX = Mouse.getDX() * sensitivity;
+        float deltaY = Mouse.getDY() * sensitivity;
+
+        cameraYaw += deltaX;
+        cameraPitch -= deltaY;
+
+        if (cameraPitch > 89.0f) cameraPitch = 89.0f;
+        if (cameraPitch < -89.0f) cameraPitch = -89.0f;
+
+        glRotatef(cameraPitch, 1.0f, 0.0f, 0.0f);
+        glRotatef(cameraYaw, 0.0f, 1.0f, 0.0f);
+    }
+
+    private void drawWorld() {
+        // Sample block positions for world generation
+        for (int x = -5; x <= 5; x++) {
+            for (int y = -5; y <= 5; y++) {
+                for (int z = -5; z <= 5; z++) {
+                    drawBlock(x * 2.0f, y * 2.0f, z * 2.0f);
+                }
+            }
+        }
+    }
+
+    private void drawBlock(float x, float y, float z) {
+        glPushMatrix();
+        glTranslatef(x, y, z);
+
+        glBegin(GL_QUADS);
+
+        // Front face
+        glColor3f(1.0f, 0.0f, 0.0f); // Red color
+        glVertex3f(-1.0f, -1.0f,  1.0f);
+        glVertex3f( 1.0f, -1.0f,  1.0f);
+        glVertex3f( 1.0f,  1.0f,  1.0f);
+        glVertex3f(-1.0f,  1.0f,  1.0f);
+
+        // Back face
+        glColor3f(0.0f, 1.0f, 0.0f); // Green color
+        glVertex3f(-1.0f, -1.0f, -1.0f);
+        glVertex3f(-1.0f,  1.0f, -1.0f);
+        glVertex3f( 1.0f,  1.0f, -1.0f);
+        glVertex3f( 1.0f, -1.0f, -1.0f);
+
+        // Top face
+        glColor3f(0.0f, 0.0f, 1.0f); // Blue color
+        glVertex3f(-1.0f,  1.0f, -1.0f);
+        glVertex3f(-1.0f,  1.0f,  1.0f);
+        glVertex3f( 1.0f,  1.0f,  1.0f);
+        glVertex3f( 1.0f,  1.0f, -1.0f);
+
+        // Bottom face
+        glColor3f(1.0f, 1.0f, 0.0f); // Yellow color
+        glVertex3f(-1.0f, -1.0f, -1.0f);
+        glVertex3f( 1.0f, -1.0f, -1.0f);
+        glVertex3f( 1.0f, -1.0f,  1.0f);
+        glVertex3f(-1.0f, -1.0f,  1.0f);
+
+        // Right face
+        glColor3f(1.0f, 0.0f, 1.0f); // Magenta color
+        glVertex3f( 1.0f, -1.0f, -1.0f);
+        glVertex3f( 1.0f,  1.0f, -1.0f);
+        glVertex3f( 1.0f,  1.0f,  1.0f);
+        glVertex3f( 1.0f, -1.0f,  1.0f);
+
+        // Left face
+        glColor3f(0.0f, 1.0f, 1.0f); // Cyan color
+        glVertex3f(-1.0f, -1.0f, -1.0f);
+        glVertex3f(-1.0f, -1.0f,  1.0f);
+        glVertex3f(-1.0f,  1.0f,  1.0f);
+        glVertex3f(-1.0f,  1.0f, -1.0f);
+
+        glEnd();
+        glPopMatrix();
+    }
+
+    private void handleBlockInteraction() {
+        if (Mouse.isButtonDown(0)) {
+            // Left-click to remove block
+            removeBlock();
+        }
+        if (Mouse.isButtonDown(1)) {
+            // Right-click to place block
+            placeBlock();
+        }
+    }
+
+    private void placeBlock() {
+        System.out.println("Block placed at: " + blocks[0] + ", " + blocks[1] + ", " + blocks[2]);
+        // Add logic to place block at mouse position
+    }
+
+    private void removeBlock() {
+        System.out.println("Block removed at: " + blocks[0] + ", " + blocks[1] + ", " + blocks[2]);
+        // Add logic to remove block at mouse position
+    }
+
+    private void cleanUp() {
+        glfwDestroyWindow(window);
+        glfwTerminate();
+    }
+}
